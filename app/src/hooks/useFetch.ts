@@ -21,7 +21,7 @@ export function useFetch<T = unknown>(
       try {
         setLoading(true);
 
-        const response = await fetch(url, (options = {}));
+        const response = await fetch(url, options);
         console.log("response", response);
 
         if (!response.ok) {
@@ -58,7 +58,7 @@ export function useFetch<T = unknown>(
       console.info("Cleanup function ran.");
       console.warn("TODO: Abort fetch with abort controller.");
     };
-  }, [url]);
+  }, [url, options]);
 
   return { data, error, loading };
 }
