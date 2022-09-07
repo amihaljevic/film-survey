@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
 import { Card } from "../Card/Card";
-import { getSurvey } from "../../api/getSurvey";
 import { useFetch } from "../../hooks/useFetch";
 
 interface Survey {
@@ -28,7 +27,6 @@ function App() {
   const { data, error, loading } = useFetch<Survey>(
     "http://localhost:3001/api/v1/survey"
   );
-  console.log("error", error);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p dangerouslySetInnerHTML={{ __html: error.message }}></p>;

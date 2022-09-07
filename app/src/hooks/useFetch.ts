@@ -17,12 +17,16 @@ export function useFetch<T = unknown>(
   useEffect(() => {
     if (!url) return;
 
+    const abortController = new AbortController();
+
     const fetchData = async () => {
       try {
         setLoading(true);
 
-        const response = await fetch(url, options);
-        console.log("response", response);
+        const response = await fetch(url, {
+          signal: abortController.signal,
+          ...options,
+        });
 
         if (!response.ok) {
           setLoading(false);
@@ -43,7 +47,10 @@ export function useFetch<T = unknown>(
         setLoading(false);
         setError(null);
       } catch (error) {
-        console.log("error", error);
+        if ((error as Error).name === "AbortError") {
+          console.error(error);
+        }
+
         setError(error as Error);
         setLoading(false);
         setData(null);
@@ -52,11 +59,10 @@ export function useFetch<T = unknown>(
       }
     };
 
-    void fetchData();
+    fetchData();
 
     return () => {
-      console.info("Cleanup function ran.");
-      console.warn("TODO: Abort fetch with abort controller.");
+      abortController.abort();
     };
   }, [url, options]);
 
