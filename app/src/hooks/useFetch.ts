@@ -47,13 +47,11 @@ export function useFetch<T = unknown>(
         setLoading(false);
         setError(null);
       } catch (error) {
-        if ((error as Error).name === "AbortError") {
-          console.error(error);
+        if ((error as Error).name !== "AbortError") {
+          setError(error as Error);
+          setLoading(false);
+          setData(null);
         }
-
-        setError(error as Error);
-        setLoading(false);
-        setData(null);
       } finally {
         setLoading(false);
       }
