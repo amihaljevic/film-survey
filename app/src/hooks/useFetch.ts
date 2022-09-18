@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface State<T> {
   data: T | null;
@@ -13,6 +13,10 @@ export function useFetch<T = unknown>(
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(false);
+  const endpoint = useMemo(
+    () => `${process.env.REACT_APP_API_URL}${url}`,
+    [url]
+  );
 
   useEffect(() => {
     if (!url) return;
@@ -23,7 +27,7 @@ export function useFetch<T = unknown>(
       try {
         setLoading(true);
 
-        const response = await fetch(url, {
+        const response = await fetch(endpoint, {
           signal: abortController.signal,
           ...options,
         });
@@ -62,7 +66,7 @@ export function useFetch<T = unknown>(
     return () => {
       abortController.abort();
     };
-  }, [url, options]);
+  }, [endpoint, options]);
 
   return { data, error, loading };
 }

@@ -36,7 +36,7 @@ function App() {
     data: surveyData,
     error,
     loading,
-  } = useFetch<Survey>("http://localhost:3001/api/v1/survey");
+  } = useFetch<Survey>("/api/v1/survey");
 
   const [review, setReview] = useState<number | null>(null);
   const [film, setFilm] = useState("");
@@ -53,7 +53,7 @@ function App() {
     event.preventDefault();
 
     const response = await fetch(
-      `http://localhost:3001/api/v1/survey/${surveyData?.data.id}/answers`,
+      `${process.env.REACT_APP_API_URL}/api/v1/survey/${surveyData?.data.id}/answers`,
       {
         method: "POST",
         headers: {
