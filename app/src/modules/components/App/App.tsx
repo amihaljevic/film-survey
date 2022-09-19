@@ -7,8 +7,10 @@ import { ReactComponent as IconStarFilled } from "assets/icons/icon-star-filled.
 import Rating from "@mui/material/Rating";
 import { useNavigate } from "react-router-dom";
 import { useFetch } from "hooks/useFetch";
-import { Card, TextInput } from "modules/components/common";
+import { Button, Card, TextInput } from "modules/components/common";
 import { Form, FormInput } from "modules/components/form";
+import { sendSurvey } from "modules/survey/api/sendSurvey";
+import { useForm, SubmitHandler, Resolver, Controller } from "react-hook-form";
 
 interface Survey {
   data: {
@@ -30,6 +32,30 @@ interface Question {
   required: boolean;
 }
 
+interface Answer {
+  questionId: string;
+  answer: string | number;
+}
+
+interface FormValues {
+  film: string;
+  review: number;
+}
+
+const resolver: Resolver<FormValues> = async (values) => {
+  return {
+    values: values.film ? values : {},
+    errors: !values.film
+      ? {
+          film: {
+            type: "required",
+            message: "This is required.",
+          },
+        }
+      : {},
+  };
+};
+
 function App() {
   const navigate = useNavigate();
   const {
@@ -38,56 +64,38 @@ function App() {
     loading,
   } = useFetch<Survey>("/api/v1/survey");
 
-  const [review, setReview] = useState<number | null>(null);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    control,
+  } = useForm<FormValues>({ resolver });
+  const onSubmit = handleSubmit(async (data) => {
+    let payload = [
+      {
+        questionId: "film",
+        answer: data.film,
+      },
+      {
+        questionId: "review",
+        answer: Number(data.review),
+      },
+    ];
+
+    await sendSurvey(`/api/v1/survey/${surveyData?.data.id}/answers`, payload);
+
+    navigate("/success");
+  });
+
+  const [review, setReview] = useState<number>(0);
   const [film, setFilm] = useState("");
 
   const handleReviewChange = (event: any) => {
-    setReview(event.target.value);
+    setReview(Number(event.target.value));
   };
 
   const handleFilmChange = (value: string) => {
     setFilm(value);
-  };
-
-  const handleSubmit = async (event: any) => {
-    event.preventDefault();
-
-    const response = await fetch(
-      `${process.env.REACT_APP_API_URL}/api/v1/survey/${surveyData?.data.id}/answers`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          data: {
-            type: "surveyAnswers",
-            attributes: {
-              answers: [
-                {
-                  questionId: "film",
-                  answer: film,
-                },
-                {
-                  questionId: "review",
-                  answer: review,
-                },
-              ],
-            },
-          },
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error("Sorry, couldn't do the fetch");
-    }
-
-    const data = await response.json();
-
-    console.log("data", data);
-
-    navigate("/success");
   };
 
   if (loading) return <p>Loading...</p>;
@@ -105,32 +113,38 @@ function App() {
             }}></div>
         </header>
 
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={onSubmit}>
           {surveyData?.data.attributes.questions.map((question) => {
             return question.questionType === "rating" ? (
-              <FormInput
-                inputId={question.questionId}
-                label={question.label}
-                key={question.questionId}>
-                <Rating
-                  name={question.questionType}
-                  onChange={handleReviewChange}
-                  value={Number(review)}
-                  id={question.questionType}
-                  emptyIcon={<IconStarEmpty />}
-                  icon={<IconStarFilled />}
-                  size="large"
-                  max={question.attributes.max}
-                />
-              </FormInput>
+              <Controller
+                key={question.questionId}
+                name={question.questionId as "review"}
+                control={control}
+                render={({ field }) => (
+                  <FormInput
+                    inputId={question.questionId}
+                    label={question.label}>
+                    <Rating
+                      {...field}
+                      id={question.questionType}
+                      value={review}
+                      onChange={handleReviewChange}
+                      emptyIcon={<IconStarEmpty />}
+                      icon={<IconStarFilled />}
+                      size="large"
+                      max={question.attributes.max}
+                    />
+                  </FormInput>
+                )}
+              />
             ) : (
               <FormInput
+                key={question.questionId}
                 inputId={question.questionId}
-                label={question.label}
-                key={question.questionId}>
+                label={question.label}>
                 <TextInput
+                  {...register(question.questionId as "film")}
                   id={question.questionId}
-                  name={question.questionId}
                   value={film}
                   required={question.required}
                   onChange={handleFilmChange}
@@ -138,6 +152,7 @@ function App() {
               </FormInput>
             );
           })}
+          <Button type="submit" label="Submit" />
         </Form>
       </Card>
     </div>

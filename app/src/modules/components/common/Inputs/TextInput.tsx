@@ -13,15 +13,10 @@ type Props = {
   onChange: (param: string) => void;
 };
 
-export const TextInput: React.FC<Props> = ({
-  id,
-  name,
-  placeholder,
-  value,
-  required,
-  onChange,
-  ...props
-}) => {
+export const TextInput: React.FC<Props> = React.forwardRef<
+  HTMLInputElement,
+  Props
+>(({ id, name, placeholder, value, required, onChange, ...props }, ref) => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onChange(event.target.value);
     console.log("value", value);
@@ -29,6 +24,7 @@ export const TextInput: React.FC<Props> = ({
 
   return (
     <input
+      ref={ref}
       css={styles.input}
       type="text"
       id={id}
@@ -40,4 +36,4 @@ export const TextInput: React.FC<Props> = ({
       {...props}
     />
   );
-};
+});
