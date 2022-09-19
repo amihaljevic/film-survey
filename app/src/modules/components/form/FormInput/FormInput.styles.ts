@@ -5,3 +5,9 @@ export const formInput = css`
   flex-direction: column;
   row-gap: 8px;
 `;
+
+export const error = css`
+  margin-block-start: 0;
+  color: var(--color-error);
+  font-weight: 700;
+`;

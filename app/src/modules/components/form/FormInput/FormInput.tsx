@@ -8,13 +8,20 @@ interface Props {
   label: string;
   inputId: string;
   children?: ReactNode | ReactNode[];
+  errors: string | undefined;
 }
 
-export const FormInput: React.FC<Props> = ({ label, inputId, children }) => {
+export const FormInput: React.FC<Props> = ({
+  label,
+  inputId,
+  children,
+  errors,
+}) => {
   return (
     <div css={styles.formInput} role="presentation">
       <label htmlFor={inputId}>{label}</label>
       {children}
+      {errors && <p css={styles.error}>👆 {errors} 👆</p>}
     </div>
   );
 };

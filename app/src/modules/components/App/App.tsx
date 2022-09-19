@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 
 import { ReactComponent as IconStarEmpty } from "assets/icons/icon-star-empty.svg";
@@ -11,6 +11,8 @@ import { Button, Card, TextInput } from "modules/components/common";
 import { Form, FormInput } from "modules/components/form";
 import { sendSurvey } from "modules/survey/api/sendSurvey";
 import { useForm, SubmitHandler, Resolver, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 
 interface Survey {
   data: {
@@ -39,22 +41,22 @@ interface Answer {
 
 interface FormValues {
   film: string;
-  review: number;
+  review: number | null;
 }
 
-const resolver: Resolver<FormValues> = async (values) => {
-  return {
-    values: values.film ? values : {},
-    errors: !values.film
-      ? {
-          film: {
-            type: "required",
-            message: "This is required.",
-          },
-        }
-      : {},
-  };
-};
+// const resolver: Resolver<FormValues> = async (values) => {
+//   return {
+//     values: values.film ? values : {},
+//     errors: !values.film
+//       ? {
+//           film: {
+//             type: "required",
+//             message: "This is required.",
+//           },
+//         }
+//       : {},
+//   };
+// };
 
 function App() {
   const navigate = useNavigate();
@@ -64,12 +66,29 @@ function App() {
     loading,
   } = useFetch<Survey>("/api/v1/survey");
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    control,
-  } = useForm<FormValues>({ resolver });
+  const [review, setReview] = useState<number | null>(null);
+  const [film, setFilm] = useState("");
+
+  const schema = yup
+    .object({
+      film: yup.string().required("Please name the film"),
+      review: yup
+        .number()
+        .defined("Please give at least 1 (one) star")
+        .min(1, "Please give at least 1 (one) star")
+        .required("Please rate the film"),
+    })
+    .required();
+
+  const { register, handleSubmit, formState, reset, control } =
+    useForm<FormValues>({
+      resolver: yupResolver(schema),
+      reValidateMode: "onChange",
+      defaultValues: {
+        film: film,
+        review: review,
+      },
+    });
   const onSubmit = handleSubmit(async (data) => {
     let payload = [
       {
@@ -82,21 +101,32 @@ function App() {
       },
     ];
 
-    await sendSurvey(`/api/v1/survey/${surveyData?.data.id}/answers`, payload);
+    formState.isValid &&
+      (await sendSurvey(
+        `/api/v1/survey/${surveyData?.data.id}/answers`,
+        payload
+      ));
 
     navigate("/success");
   });
 
-  const [review, setReview] = useState<number>(0);
-  const [film, setFilm] = useState("");
+  useEffect(() => {
+    console.log("formState", formState);
+  }, [formState]);
 
-  const handleReviewChange = (event: any) => {
-    setReview(Number(event.target.value));
+  const handleReviewChange = (event: any, value: number | null) => {
+    setReview(Number(value));
   };
 
   const handleFilmChange = (value: string) => {
     setFilm(value);
   };
+
+  useEffect(() => {
+    if (formState.isSubmitSuccessful) {
+      reset();
+    }
+  }, [formState.isSubmitSuccessful, reset]);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p dangerouslySetInnerHTML={{ __html: error.message }}></p>;
@@ -123,12 +153,23 @@ function App() {
                 render={({ field }) => (
                   <FormInput
                     inputId={question.questionId}
-                    label={question.label}>
+                    label={question.label}
+                    errors={formState.errors.review?.message}>
+                    <TextInput
+                      {...register(question.questionId as "review")}
+                      id={question.questionId}
+                      value={review as number}
+                      required={question.required}
+                      onChange={() => {}}
+                      type="number"
+                      hidden
+                      readOnly
+                    />
                     <Rating
                       {...field}
                       id={question.questionType}
-                      value={review}
-                      onChange={handleReviewChange}
+                      // defaultValue={review as number}
+                      // onChange={handleReviewChange}
                       emptyIcon={<IconStarEmpty />}
                       icon={<IconStarFilled />}
                       size="large"
@@ -141,7 +182,8 @@ function App() {
               <FormInput
                 key={question.questionId}
                 inputId={question.questionId}
-                label={question.label}>
+                label={question.label}
+                errors={formState.errors.film?.message}>
                 <TextInput
                   {...register(question.questionId as "film")}
                   id={question.questionId}
