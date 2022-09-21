@@ -7,7 +7,9 @@ export const input = css`
   border: 2px solid var(--input-border-color);
   border-radius: 2px;
   box-shadow: 4px 4px 0px var(--input-border-color);
-  padding: 8px 8px;
+  padding: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
 
   &:invalid {
     --input-border-color: var(--color-error);

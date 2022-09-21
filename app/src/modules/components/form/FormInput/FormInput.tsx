@@ -19,7 +19,9 @@ export const FormInput: React.FC<Props> = ({
 }) => {
   return (
     <div css={styles.formInput} role="presentation">
-      <label htmlFor={inputId}>{label}</label>
+      <label htmlFor={inputId} css={styles.label}>
+        {label}
+      </label>
       {children}
       {errors && <p css={styles.error}>👆 {errors} 👆</p>}
     </div>

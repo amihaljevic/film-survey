@@ -55,16 +55,14 @@ function App() {
   const [review, setReview] = useState<number | null>(0);
   const [film, setFilm] = useState("");
 
-  const schema = yup
-    .object({
-      film: yup.string().required("Please name the film"),
-      review: yup
-        .number()
-        .defined("Please give at least 1 (one) star")
-        .min(1, "Please give at least 1 (one) star")
-        .required("Please rate the film"),
-    })
-    .required();
+  const schema = yup.object({
+    film: yup.string().required("Please name the film"),
+    review: yup
+      .number()
+      .defined("Please give at least 1 (one) star")
+      .min(1, "Please give at least 1 (one) star")
+      .required("Please rate the film"),
+  });
 
   const { register, handleSubmit, formState, reset, control } =
     useForm<FormValues>({
@@ -99,10 +97,6 @@ function App() {
     }
   });
 
-  useEffect(() => {
-    console.log("formState", formState);
-  }, [formState]);
-
   const handleFilmChange = (
     event: React.SyntheticEvent<Element, Event>,
     value: string | number | null
@@ -123,16 +117,9 @@ function App() {
 
   return (
     <div className="page__wrapper" role="presentation">
-      <Card>
-        <header>
-          <h1>{surveyData?.data.attributes?.title}</h1>
-          <div
-            role="presentation"
-            dangerouslySetInnerHTML={{
-              __html: surveyData?.data.attributes.description as string,
-            }}></div>
-        </header>
-
+      <Card
+        title={surveyData?.data.attributes?.title}
+        description={surveyData?.data.attributes.description}>
         <Form onSubmit={onSubmit}>
           {surveyData?.data.attributes.questions.map((question) => {
             return question.questionType === "rating" ? (

@@ -1,11 +1,14 @@
 import { Card } from "modules/components";
 import { Answer } from "modules/components/App/App";
+import { DefinitionList } from "modules/components/common/DefinitionList/DefinitionList";
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 
 const SuccessPage = () => {
   const location = useLocation();
   const { data } = location.state;
+
+  console.log("location", location);
 
   return (
     <div className="page__wrapper" role="presentation">
@@ -21,16 +24,7 @@ const SuccessPage = () => {
         </header>
 
         <section>
-          <dl>
-            {data.attributes.answers.map((answer: Answer) => {
-              return (
-                <div key={answer.questionId}>
-                  <dt>{answer.questionId}: </dt>
-                  <dd>{answer.answer}</dd>
-                </div>
-              );
-            })}
-          </dl>
+          <DefinitionList data={data.attributes.answers} />
         </section>
       </Card>
     </div>
