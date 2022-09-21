@@ -1,5 +1,5 @@
 
-# 🎬 Film Survey 
+# 🎬 Film Survey API
 
 This is a faux film festival survey. The user is prompted to enter the name od the film watched and its rating.
 
