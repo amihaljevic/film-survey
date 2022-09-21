@@ -44,9 +44,6 @@ export function useFetch<T = unknown>(
 
         const data = (await response.json()) as T;
 
-        console.log("response", response);
-        console.log("data", data);
-
         setData(data);
         setLoading(false);
         setError(null);

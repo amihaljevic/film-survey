@@ -10,7 +10,7 @@ import { useFetch } from "hooks/useFetch";
 import { Button, Card, TextInput } from "modules/components/common";
 import { Form, FormInput } from "modules/components/form";
 import { sendSurvey } from "modules/survey/api/sendSurvey";
-import { useForm, SubmitHandler, Resolver, Controller } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
@@ -34,7 +34,7 @@ interface Question {
   required: boolean;
 }
 
-interface Answer {
+export interface Answer {
   questionId: string;
   answer: string | number;
 }
@@ -44,20 +44,6 @@ interface FormValues {
   review: number | null;
 }
 
-// const resolver: Resolver<FormValues> = async (values) => {
-//   return {
-//     values: values.film ? values : {},
-//     errors: !values.film
-//       ? {
-//           film: {
-//             type: "required",
-//             message: "This is required.",
-//           },
-//         }
-//       : {},
-//   };
-// };
-
 function App() {
   const navigate = useNavigate();
   const {
@@ -66,7 +52,7 @@ function App() {
     loading,
   } = useFetch<Survey>("/api/v1/survey");
 
-  const [review, setReview] = useState<number | null>(null);
+  const [review, setReview] = useState<number | null>(0);
   const [film, setFilm] = useState("");
 
   const schema = yup
@@ -83,14 +69,13 @@ function App() {
   const { register, handleSubmit, formState, reset, control } =
     useForm<FormValues>({
       resolver: yupResolver(schema),
-      reValidateMode: "onChange",
       defaultValues: {
         film: film,
         review: review,
       },
     });
   const onSubmit = handleSubmit(async (data) => {
-    let payload = [
+    let payload: Answer[] = [
       {
         questionId: "film",
         answer: data.film,
@@ -101,25 +86,30 @@ function App() {
       },
     ];
 
-    formState.isValid &&
-      (await sendSurvey(
+    try {
+      const response = await sendSurvey(
         `/api/v1/survey/${surveyData?.data.id}/answers`,
         payload
-      ));
+      );
 
-    navigate("/success");
+      navigate("/success", { state: response.data });
+    } catch (error) {
+      console.error(error);
+      navigate("/error");
+    }
   });
 
   useEffect(() => {
     console.log("formState", formState);
   }, [formState]);
 
-  const handleReviewChange = (event: any, value: number | null) => {
-    setReview(Number(value));
-  };
-
-  const handleFilmChange = (value: string) => {
-    setFilm(value);
+  const handleFilmChange = (
+    event: React.SyntheticEvent<Element, Event>,
+    value: string | number | null
+  ) => {
+    if (typeof value === "string") {
+      setFilm(value);
+    }
   };
 
   useEffect(() => {
@@ -158,7 +148,7 @@ function App() {
                     <TextInput
                       {...register(question.questionId as "review")}
                       id={question.questionId}
-                      value={review as number}
+                      value={field.value as number}
                       required={question.required}
                       onChange={() => {}}
                       type="number"
@@ -168,8 +158,6 @@ function App() {
                     <Rating
                       {...field}
                       id={question.questionType}
-                      // defaultValue={review as number}
-                      // onChange={handleReviewChange}
                       emptyIcon={<IconStarEmpty />}
                       icon={<IconStarFilled />}
                       size="large"
