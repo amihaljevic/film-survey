@@ -6,11 +6,18 @@ This is a faux film festival survey. The user is prompted to enter the name od t
 As a reward, the user gets a "thank you" note 🤲
 
 
+## Table of Contents
+
+- [Tech Stack](#tech-stack)
+- [Run React App Locally](#run-react-app-locally)
+- [Run Server Locally](#run-server-locally)
+- [API Reference](#api-reference)
 ## Tech Stack
 
 **Client:** React, react-hook-forms, TypeScript, MUI, Emotion
 
 **Server:** Node, Express
+
 
 ## Run React App Locally
 
